@@ -1970,31 +1970,7 @@ class Simulator(gym.Env):
             observation = self.camera_model.distort(observation)
 
         return observation
-    
-    def render_topdown_and_front_img(self, segment: bool = False):
-        topdown_img = self._render_img(
-            WINDOW_WIDTH,
-            WINDOW_HEIGHT,
-            self.multi_fbo_human,
-            self.final_fbo_human,
-            self.img_array_human,
-            top_down=True,
-            segment=segment,
-        )
-        front_img = self._render_img(
-            WINDOW_WIDTH,
-            WINDOW_HEIGHT,
-            self.multi_fbo_human,
-            self.final_fbo_human,
-            self.img_array_human,
-            top_down=False,
-            segment=segment,
-        )
-        # self.undistort - for UndistortWrapper
-        if self.distortion and not self.undistort:
-            front_img = self.camera_model.distort(front_img)
-        return topdown_img, front_img
-        
+
     def render(self, mode: str = "human", close: bool = False, segment: bool = False):
         """
         Render the environment for human viewing

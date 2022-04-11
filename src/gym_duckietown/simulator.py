@@ -3,6 +3,7 @@ import os
 from collections import namedtuple
 from ctypes import POINTER
 from dataclasses import dataclass
+from re import S
 
 import sys
 
@@ -207,6 +208,8 @@ class Simulator(gym.Env):
     def __init__(
         self,
         map_name: str = DEFAULT_MAP_NAME,
+        is_original_map: bool = False,
+        map_abs_path: str = "",
         max_steps: int = DEFAULT_MAX_STEPS,
         draw_curve: bool = False,
         draw_bbox: bool = False,
@@ -346,7 +349,10 @@ class Simulator(gym.Env):
         self.accept_start_angle_deg = accept_start_angle_deg
 
         # Load the map
-        self._load_map(map_name)
+        if not is_original_map:
+            self._load_map(map_name)
+        else:
+            self._load_original_map(map_abs_path)
 
         # Distortion params, if so, load the library, only if not bbox mode
         self.distortion = distortion and not draw_bbox
@@ -777,6 +783,29 @@ class Simulator(gym.Env):
 
         # Get the full map file path
         self.map_file_path = get_resource_path(f"{map_name}.yaml")
+
+        logger.debug(f'loading map file "{self.map_file_path}"')
+
+        with open(self.map_file_path, "r") as f:
+            self.map_data = yaml.load(f, Loader=yaml.Loader)
+
+        self._interpret_map(self.map_data)
+    
+    def _load_original_map(self, map_abs_path: str):
+        """
+        Load the map layout from a YAML file
+        """
+
+        # Store the map name
+        if os.path.exists(map_abs_path) and os.path.isfile(map_abs_path):
+            # if env is loaded using gym's register function, we need to extract the map name from the complete url
+            map_name = os.path.basename(map_abs_path)
+            assert map_name.endswith(".yaml")
+            map_name = ".".join(map_name.split(".")[:-1])
+        self.map_name = map_name
+
+        # Get the full map file path
+        self.map_file_path = map_abs_path
 
         logger.debug(f'loading map file "{self.map_file_path}"')
 

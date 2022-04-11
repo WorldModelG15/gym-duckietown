@@ -207,6 +207,8 @@ class Simulator(gym.Env):
     def __init__(
         self,
         map_name: str = DEFAULT_MAP_NAME,
+        map_abs_path: str = "",
+        is_original_map: bool = False,
         max_steps: int = DEFAULT_MAX_STEPS,
         draw_curve: bool = False,
         draw_bbox: bool = False,
@@ -346,7 +348,10 @@ class Simulator(gym.Env):
         self.accept_start_angle_deg = accept_start_angle_deg
 
         # Load the map
-        self._load_map(map_name)
+        if is_original_map:
+            self._load_original_map(map_abs_path)
+        else:
+            self._load_map(map_name)
 
         # Distortion params, if so, load the library, only if not bbox mode
         self.distortion = distortion and not draw_bbox
@@ -785,6 +790,29 @@ class Simulator(gym.Env):
 
         self._interpret_map(self.map_data)
 
+    def _load_original_map(self, map_abs_path: str):
+        """
+        Load the map layout from a YAML file
+        """
+
+        # Store the map name
+        if os.path.exists(map_abs_path) and os.path.isfile(map_abs_path):
+            # if env is loaded using gym's register function, we need to extract the map name from the complete url
+            map_name = os.path.basename(map_abs_path)
+            assert map_name.endswith(".yaml")
+            map_name = ".".join(map_name.split(".")[:-1])
+        self.map_name = map_name
+
+        # Get the full map file path
+        self.map_file_path = map_abs_path
+
+        logger.debug(f'loading map file "{self.map_file_path}"')
+
+        with open(self.map_file_path, "r") as f:
+            self.map_data = yaml.load(f, Loader=yaml.Loader)
+
+        self._interpret_map(self.map_data)
+
     def _interpret_map(self, map_data: MapFormat1):
         try:
             if not "tile_size" in map_data:
@@ -1143,7 +1171,7 @@ class Simulator(gym.Env):
         """
 
         x, _, z = abs_pos
-        i = math.floor(x / self.road_tile_size)
+        i = math.floorc
         j = math.floor(z / self.road_tile_size)
 
         return int(i), int(j)
@@ -1351,6 +1379,7 @@ class Simulator(gym.Env):
             return None, None
 
         # Find curve with largest dotproduct with heading
+        # 
         curves = self._get_tile(i, j)["curves"]
         curve_headings = curves[:, -1, :] - curves[:, 0, :]
         curve_headings = curve_headings / np.linalg.norm(curve_headings).reshape(1, -1)

@@ -7,6 +7,8 @@ from re import S
 
 import sys
 
+from pyrsistent import optional
+
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
@@ -21,6 +23,7 @@ import math
 import numpy as np
 import pyglet
 import yaml
+import random
 from geometry import SE2value
 from gym import spaces
 from gym.utils import seeding
@@ -802,7 +805,7 @@ class Simulator(gym.Env):
             map_name = os.path.basename(map_abs_path)
             assert map_name.endswith(".yaml")
             map_name = ".".join(map_name.split(".")[:-1])
-        self.map_name = map_name
+            self.map_name = map_name
 
         # Get the full map file path
         self.map_file_path = map_abs_path
@@ -813,6 +816,52 @@ class Simulator(gym.Env):
             self.map_data = yaml.load(f, Loader=yaml.Loader)
 
         self._interpret_map(self.map_data)
+    def create_and_load_random_map(
+        self,
+        base_map_dir_abs_path,
+        base_map_name,
+        created_map_dir_abs_path,
+        created_map_name,
+        delete_created_map = False,
+        min_duck_num = 1,
+        max_duck_num = 10,
+        min_duck_height = 0.05,
+        max_duck_height = 0.10,
+        ):
+        # base_map_abs_path: ベースとなるマップファイルの絶対パス
+        # ベースマップの走行可能エリアにmin_duck_num ~ max_duck_num個のduckをランダムに配置する
+        os.makedirs(base_map_dir_abs_path, exist_ok=True)
+        os.makedirs(created_map_dir_abs_path, exist_ok=True)
+        base_map_abs_path = os.path.join(base_map_dir_abs_path, base_map_name + ".yaml")
+        created_map_abs_path = os.path.join(created_map_dir_abs_path, created_map_name + ".yaml")
+        duck_num = random.choice(list(range(min_duck_num, max_duck_num+1)))
+        self._load_original_map(base_map_abs_path)
+        self._interpret_map(self.map_data)
+        selected_tiles = random.choices(self.drivable_tiles, k=duck_num)
+        duck_heights = random.choices(np.arange(min_duck_height, max_duck_height+0.01, 0.01).tolist(), k=duck_num)
+        duck_poss = [(tile["coords"][0]+0.5, tile["coords"][1]+0.5) for tile in selected_tiles]
+        bf = open(base_map_abs_path, "r")
+        base_map = yaml.load(bf, Loader=yaml.Loader)
+        bf.close()
+        with open(created_map_abs_path, "w") as cf:
+            objects = []
+            for i in range(duck_num):
+                object = {}
+                object["height"] = duck_heights[i]
+                object["kind"] = "duckie"
+                object["optional"] = False
+                object["pos"] = list(duck_poss[i])
+                object["rotate"] = 60
+                object["static"] = True
+                objects.append(object)
+            base_map["objects"] = objects
+            yaml.dump(base_map, cf)
+        self._load_original_map(created_map_abs_path)
+        if delete_created_map:
+            os.remove(created_map_abs_path)
+
+
+
 
     def _interpret_map(self, map_data: MapFormat1):
         try:

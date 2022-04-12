@@ -816,7 +816,7 @@ class Simulator(gym.Env):
             self.map_data = yaml.load(f, Loader=yaml.Loader)
 
         self._interpret_map(self.map_data)
-    def create_and_load_random_map(
+    def create_and_load_random_static_duckie_map(
         self,
         base_map_dir_abs_path,
         base_map_name,
@@ -839,7 +839,9 @@ class Simulator(gym.Env):
         self._interpret_map(self.map_data)
         selected_tiles = random.choices(self.drivable_tiles, k=duck_num)
         duck_heights = random.choices(np.arange(min_duck_height, max_duck_height+0.01, 0.01).tolist(), k=duck_num)
-        duck_poss = [(tile["coords"][0]+0.5, tile["coords"][1]+0.5) for tile in selected_tiles]
+        # duckの位置に加えるゆらぎ(-0.3 ~ 0.3)
+        randomness = ((np.random.rand(len(selected_tiles)) * 6. - 3.) * 0.1).tolist()
+        duck_poss = [(tile["coords"][0]+0.5+randomness[i], tile["coords"][1]+0.5+randomness[i]) for i, tile in enumerate(selected_tiles)]
         bf = open(base_map_abs_path, "r")
         base_map = yaml.load(bf, Loader=yaml.Loader)
         bf.close()

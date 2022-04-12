@@ -352,17 +352,10 @@ class Simulator(gym.Env):
         self.accept_start_angle_deg = accept_start_angle_deg
 
         # Load the map
-<<<<<<< HEAD
         if not is_original_map:
             self._load_map(map_name)
         else:
             self._load_original_map(map_abs_path)
-=======
-        if is_original_map:
-            self._load_original_map(map_abs_path)
-        else:
-            self._load_map(map_name)
->>>>>>> fb6138638723fd822079f735963afa0697ca7472
 
         # Distortion params, if so, load the library, only if not bbox mode
         self.distortion = distortion and not draw_bbox
@@ -823,7 +816,7 @@ class Simulator(gym.Env):
             self.map_data = yaml.load(f, Loader=yaml.Loader)
 
         self._interpret_map(self.map_data)
-    def create_and_load_random_map(
+    def create_and_load_random_static_duckie_map(
         self,
         base_map_dir_abs_path,
         base_map_name,
@@ -846,7 +839,8 @@ class Simulator(gym.Env):
         self._interpret_map(self.map_data)
         selected_tiles = random.choices(self.drivable_tiles, k=duck_num)
         duck_heights = random.choices(np.arange(min_duck_height, max_duck_height+0.01, 0.01).tolist(), k=duck_num)
-        duck_poss = [(tile["coords"][0]+0.5, tile["coords"][1]+0.5) for tile in selected_tiles]
+        randomness = ((np.random.random(len(selected_tiles)) * 6. - 3.) * 0.1).tolist()
+        duck_poss = [(tile["coords"][0]+0.5+randomness[i], tile["coords"][1]+0.5+randomness[i]) for i, tile in enumerate(selected_tiles)]
         bf = open(base_map_abs_path, "r")
         base_map = yaml.load(bf, Loader=yaml.Loader)
         bf.close()
@@ -869,29 +863,6 @@ class Simulator(gym.Env):
 
 
 
-
-    def _load_original_map(self, map_abs_path: str):
-        """
-        Load the map layout from a YAML file
-        """
-
-        # Store the map name
-        if os.path.exists(map_abs_path) and os.path.isfile(map_abs_path):
-            # if env is loaded using gym's register function, we need to extract the map name from the complete url
-            map_name = os.path.basename(map_abs_path)
-            assert map_name.endswith(".yaml")
-            map_name = ".".join(map_name.split(".")[:-1])
-        self.map_name = map_name
-
-        # Get the full map file path
-        self.map_file_path = map_abs_path
-
-        logger.debug(f'loading map file "{self.map_file_path}"')
-
-        with open(self.map_file_path, "r") as f:
-            self.map_data = yaml.load(f, Loader=yaml.Loader)
-
-        self._interpret_map(self.map_data)
 
     def _interpret_map(self, map_data: MapFormat1):
         try:
@@ -1251,7 +1222,7 @@ class Simulator(gym.Env):
         """
 
         x, _, z = abs_pos
-        i = math.floorc
+        i = math.floor(x / self.road_tile_size)
         j = math.floor(z / self.road_tile_size)
 
         return int(i), int(j)
@@ -1459,7 +1430,6 @@ class Simulator(gym.Env):
             return None, None
 
         # Find curve with largest dotproduct with heading
-        # 
         curves = self._get_tile(i, j)["curves"]
         curve_headings = curves[:, -1, :] - curves[:, 0, :]
         curve_headings = curve_headings / np.linalg.norm(curve_headings).reshape(1, -1)

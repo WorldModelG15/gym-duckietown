@@ -1,0 +1,107 @@
+tiles:
+- - grass
+  - grass
+  - grass
+  - grass
+  - grass
+  - grass
+  - grass
+  - grass
+- - grass
+  - curve_left/W
+  - straight/E
+  - straight/E
+  - straight/E
+  - straight/E
+  - curve_left/N
+  - grass
+- - grass
+  - straight/S
+  - grass
+  - grass
+  - grass
+  - grass
+  - straight/S
+  - grass
+- - grass
+  - straight/S
+  - grass
+  - grass
+  - grass
+  - grass
+  - straight/S
+  - grass
+- - grass
+  - straight/S
+  - grass
+  - grass
+  - curve_left/W
+  - straight/E
+  - curve_left/E
+  - grass
+- - grass
+  - curve_left/S
+  - straight/E
+  - straight/E
+  - curve_left/E
+  - grass
+  - grass
+  - grass
+- - grass
+  - grass
+  - grass
+  - grass
+  - grass
+  - grass
+  - grass
+  - grass
+tile_size: 0.585
+objects:
+- height: 0.1
+  kind: duckie
+  optional: false
+  pos:
+  - 6.717535738279188
+  - 2.7175357382791883
+  rotate: 60
+  static: true
+- height: 0.08000000000000002
+  kind: duckie
+  optional: false
+  pos:
+  - 6.3741305767756975
+  - 1.374130576775697
+  rotate: 60
+  static: true
+- height: 0.08000000000000002
+  kind: duckie
+  optional: false
+  pos:
+  - 1.7156450153814273
+  - 3.7156450153814276
+  rotate: 60
+  static: true
+- height: 0.05
+  kind: duckie
+  optional: false
+  pos:
+  - 1.7985714566079005
+  - 4.798571456607901
+  rotate: 60
+  static: true
+- height: 0.09000000000000001
+  kind: duckie
+  optional: false
+  pos:
+  - 1.4572125974365833
+  - 3.457212597436583
+  rotate: 60
+  static: true
+- height: 0.08000000000000002
+  kind: duckie
+  optional: false
+  pos:
+  - 5.27345000637443
+  - 4.27345000637443
+  rotate: 60
+  static: true

@@ -9,6 +9,7 @@ from zuper_commons.logs import ZLogger
 from duckietown_world.resources import list_maps2
 
 logger = ZLogger("gym-duckietown")
+# control log
 logger.setLevel(logging.WARN)
 import os
 

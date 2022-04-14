@@ -860,8 +860,15 @@ class Simulator(gym.Env):
         self._load_original_map(created_map_abs_path)
         if delete_created_map:
             os.remove(created_map_abs_path)
-
-
+    
+    def load_map(
+        self,
+        map_dir_abs_path,
+        map_name,
+        ):
+        map_abs_path = os.path.join(map_dir_abs_path, map_name + ".yaml")
+        self._load_original_map(map_abs_path)
+        self._interpret_map(self.map_data)
 
 
     def _interpret_map(self, map_data: MapFormat1):

@@ -1,6 +1,7 @@
 # coding=utf-8
 __version__ = "6.1.31"
 
+import logging
 import platform
 
 from zuper_commons.logs import ZLogger
@@ -8,6 +9,8 @@ from zuper_commons.logs import ZLogger
 from duckietown_world.resources import list_maps2
 
 logger = ZLogger("gym-duckietown")
+# control log
+logger.setLevel(logging.WARN)
 import os
 
 import pyglet
@@ -45,6 +48,14 @@ for map_name, filename in list_maps2().items():
     if "regress" not in filename:
         reg_map_env(map_name, filename)
 
-register(id="MultiMap-v0", entry_point="gym_duckietown.envs:MultiMapEnv", reward_threshold=400.0)
+register(
+    id="MultiMap-v0",
+    entry_point="gym_duckietown.envs:MultiMapEnv",
+    reward_threshold=400.0,
+)
 
-register(id="Duckiebot-v0", entry_point="gym_duckietown.envs:DuckiebotEnv", reward_threshold=400.0)
+register(
+    id="Duckiebot-v0",
+    entry_point="gym_duckietown.envs:DuckiebotEnv",
+    reward_threshold=400.0,
+)

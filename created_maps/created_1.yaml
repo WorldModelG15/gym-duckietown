@@ -57,51 +57,67 @@ tiles:
   - grass
 tile_size: 0.585
 objects:
-- height: 0.1
-  kind: duckie
-  optional: false
-  pos:
-  - 6.717535738279188
-  - 2.7175357382791883
-  rotate: 60
-  static: true
 - height: 0.08000000000000002
   kind: duckie
   optional: false
   pos:
-  - 6.3741305767756975
-  - 1.374130576775697
-  rotate: 60
-  static: true
-- height: 0.08000000000000002
-  kind: duckie
-  optional: false
-  pos:
-  - 1.7156450153814273
-  - 3.7156450153814276
-  rotate: 60
-  static: true
-- height: 0.05
-  kind: duckie
-  optional: false
-  pos:
-  - 1.7985714566079005
-  - 4.798571456607901
+  - 1.496715380154679
+  - 3.4967153801546793
   rotate: 60
   static: true
 - height: 0.09000000000000001
   kind: duckie
   optional: false
   pos:
-  - 1.4572125974365833
-  - 3.457212597436583
+  - 3.400756183197134
+  - 5.400756183197134
   rotate: 60
   static: true
-- height: 0.08000000000000002
+- height: 0.05
   kind: duckie
   optional: false
   pos:
-  - 5.27345000637443
-  - 4.27345000637443
+  - 5.4288375879306
+  - 1.4288375879305995
+  rotate: 60
+  static: true
+- height: 0.060000000000000005
+  kind: duckie
+  optional: false
+  pos:
+  - 1.4930619624142143
+  - 1.4930619624142143
+  rotate: 60
+  static: true
+- height: 0.1
+  kind: duckie
+  optional: false
+  pos:
+  - 1.354952234658682
+  - 1.354952234658682
+  rotate: 60
+  static: true
+- height: 0.07
+  kind: duckie
+  optional: false
+  pos:
+  - 4.644323649167405
+  - 4.644323649167405
+  rotate: 60
+  static: true
+- height: 0.07
+  kind: duckie
+  optional: false
+  pos:
+  - 4.317363614751593
+  - 5.317363614751593
+  rotate: 60
+  static: true
+- height: 0.09000000000000001
+  kind: duckie
+  optional: false
+  pos:
+  - 1.5248463916250137
+  - 4.5248463916250135
   rotate: 60
   static: true

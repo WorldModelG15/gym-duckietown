@@ -3,6 +3,7 @@ import os
 from collections import namedtuple
 from ctypes import POINTER
 from dataclasses import dataclass
+from random import random
 
 import sys
 

@@ -241,6 +241,7 @@ class Simulator(gym.Env):
         color_sky: Sequence[float] = BLUE_SKY,
         style: str = "photos",
         enable_leds: bool = False,
+        enable_newly_visited_tile_reward: bool = False,
     ):
         """
 
@@ -248,7 +249,7 @@ class Simulator(gym.Env):
         :param max_steps:
         :param draw_curve:
         :param draw_bbox:
-        :param domain_rand: If true, applies domain  ization
+        :param domain_rand: If true, applies domain randomization
         :param frame_rate:
         :param frame_skip:
         :param camera_width:
@@ -266,6 +267,7 @@ class Simulator(gym.Env):
         :param enable_leds: Enables LEDs drawing.
         """
         self.enable_leds = enable_leds
+        self.enable_newly_visited_tile_reward = enable_newly_visited_tile_reward
         information = get_graphics_information()
         logger.info(
             f"Information about the graphics card:",
@@ -412,6 +414,8 @@ class Simulator(gym.Env):
 
         self.last_action = np.array([0, 0])
         self.wheelVels = np.array([0, 0])
+
+        self.visited_tiles = {}
 
     def _init_vlists(self):
 
@@ -1879,7 +1883,7 @@ class Simulator(gym.Env):
         gz = GH * tile_size - cp[1]
         return [gx, gy, gz], angle
 
-    def compute_reward(self, pos, angle, speed):
+    def compute_reward(self, pos, angle, speed, tile_coords=None):
         # Compute the collision avoidance penalty
         col_penalty = self.proximity_penalty2(pos, angle)
 
@@ -1894,6 +1898,12 @@ class Simulator(gym.Env):
             reward = (
                 +1.0 * speed * lp.dot_dir + -10 * np.abs(lp.dist) + +40 * col_penalty
             )
+            if not tile_coords is None:
+                if not tuple(tile_coords) in self.visited_tiles:
+                    reward += 100.
+                    self.visited_tiles[tuple(tile_coords)] = True
+                else:
+                    reward -= 1.
         return reward
 
     def step(self, action: np.ndarray):
@@ -1906,13 +1916,16 @@ class Simulator(gym.Env):
         # Generate the current camera image
         obs = self.render_obs()
         misc = self.get_agent_info()
-
+        if self.enable_newly_visited_tile_reward:
+            d = self._compute_done_reward(tile_coords=misc["Simulator"]["tile_coords"])
+        else:
+            d = self._compute_done_reward(tile_coords=None)
         d = self._compute_done_reward()
         misc["Simulator"]["msg"] = d.done_why
 
         return obs, d.reward, d.done, misc
 
-    def _compute_done_reward(self) -> DoneRewardInfo:
+    def _compute_done_reward(self, tile_coords=None) -> DoneRewardInfo:
         # If the agent is not in a valid pose (on drivable tiles)
         if not self._valid_pose(self.cur_pos, self.cur_angle):
             msg = "Stopping the simulator because we are at an invalid pose."
@@ -1932,7 +1945,7 @@ class Simulator(gym.Env):
             done_code = "max-steps-reached"
         else:
             done = False
-            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed)
+            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed, tile_coords=tile_coords)
             msg = ""
             done_code = "in-progress"
         return DoneRewardInfo(

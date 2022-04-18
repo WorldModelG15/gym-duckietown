@@ -241,7 +241,6 @@ class Simulator(gym.Env):
         color_sky: Sequence[float] = BLUE_SKY,
         style: str = "photos",
         enable_leds: bool = False,
-        enable_newly_visited_tile_reward: bool = False,
     ):
         """
 
@@ -249,7 +248,7 @@ class Simulator(gym.Env):
         :param max_steps:
         :param draw_curve:
         :param draw_bbox:
-        :param domain_rand: If true, applies domain randomization
+        :param domain_rand: If true, applies domain  ization
         :param frame_rate:
         :param frame_skip:
         :param camera_width:
@@ -267,7 +266,6 @@ class Simulator(gym.Env):
         :param enable_leds: Enables LEDs drawing.
         """
         self.enable_leds = enable_leds
-        self.enable_newly_visited_tile_reward = enable_newly_visited_tile_reward
         information = get_graphics_information()
         logger.info(
             f"Information about the graphics card:",
@@ -414,8 +412,6 @@ class Simulator(gym.Env):
 
         self.last_action = np.array([0, 0])
         self.wheelVels = np.array([0, 0])
-
-        self.visited_tiles = {}
 
     def _init_vlists(self):
 
@@ -577,9 +573,10 @@ class Simulator(gym.Env):
         self.speed = 0.0
         if self.randomize_maps_on_reset:
             map_name = self.np_random.choice(self.map_names)
-
+            self.map_name = map_name
             logger.info(f"Random map chosen: {map_name}")
-            print("random map:", map_name)
+            #print("random map:", map_name)
+            map_name = os.path.join(self.map_dir_abs_path, map_name + ".yaml")
             self._load_original_map(map_name)
 
         self.randomization_settings = self.randomizer.randomize(rng=self.np_random)
@@ -842,23 +839,23 @@ class Simulator(gym.Env):
         """
 
         # Store the map name
-        if os.path.exists(map_abs_path) and os.path.isfile(map_abs_path):
+        #if os.path.exists(map_abs_path) and os.path.isfile(map_abs_path):
             # if env is loaded using gym's register function, we need to extract the map name from the complete url
             # map_name = os.path.basename(map_abs_path)
-            # map_name = self.np_random.choice(self.map_names)
-            map_name = map_abs_path + ".yaml"
-            assert map_name.endswith(".yaml")
-            map_name = ".".join(map_name.split(".")[:-1])
-            self.map_name = map_name
+            #map_name = map_name + ".yaml"
+            #assert map_name.endswith(".yaml")
+            #map_name = ".".join(map_name.split(".")[:-1])
+        #self.map_name = map_name
 
         # Get the full map file path
-        self.map_file_path = self.map_name
+        self.map_file_path = map_abs_path
 
         logger.debug(f'loading map file "{self.map_file_path}"')
+        print("loading map:",self.map_file_path)
 
         with open(self.map_file_path, "r") as f:
             self.map_data = yaml.load(f, Loader=yaml.Loader)
-
+        print('map_data:',self.map_data)
         self._interpret_map(self.map_data)
 
     def create_and_load_random_static_duckie_map(
@@ -920,15 +917,35 @@ class Simulator(gym.Env):
         if delete_created_map:
             os.remove(created_map_abs_path)
 
+    def load_map_random(
+        self,
+        map_dir_abs_path,
+        map_name='',
+        Random=True,
+    ):
+        self.map_dir_abs_path = map_dir_abs_path
+        # map_abs_path = os.path.join(map_dir_abs_path, map_name + ".yaml")
+        if Random == True:
+            self.randomize_maps_on_reset = True
+            self.map_names = os.listdir(map_dir_abs_path)
+            self.map_names = [mapfile.replace(".yaml", "") for mapfile in self.map_names]
+            map_name = self.np_random.choice(self.map_names)
+        map_abs_path = os.path.join(map_dir_abs_path, map_name + ".yaml")
+        self._load_original_map(map_abs_path)
+        self._interpret_map(self.map_data)
+
     def load_map(
         self,
         map_dir_abs_path,
-    ):
-        # map_abs_path = os.path.join(map_dir_abs_path, map_name + ".yaml")
-        self.randomize_maps_on_reset = True
-        self.map_names = os.listdir(map_dir_abs_path)
-        self.map_names = [mapfile.replace(".yaml", "") for mapfile in self.map_names]
-        map_name = self.np_random.choice(self.map_names)
+        map_name='',
+        Random = False
+        ):
+        self.map_dir_abs_path = map_dir_abs_path
+        if Random == True:
+            self.randomize_maps_on_reset = True
+            self.map_names = os.listdir(map_dir_abs_path)
+            self.map_names = [mapfile.replace(".yaml", "") for mapfile in self.map_names]
+            map_name = self.np_random.choice(self.map_names)
         map_abs_path = os.path.join(map_dir_abs_path, map_name + ".yaml")
         self._load_original_map(map_abs_path)
         self._interpret_map(self.map_data)
@@ -1862,7 +1879,7 @@ class Simulator(gym.Env):
         gz = GH * tile_size - cp[1]
         return [gx, gy, gz], angle
 
-    def compute_reward(self, pos, angle, speed, tile_coords=None):
+    def compute_reward(self, pos, angle, speed):
         # Compute the collision avoidance penalty
         col_penalty = self.proximity_penalty2(pos, angle)
 
@@ -1877,14 +1894,6 @@ class Simulator(gym.Env):
             reward = (
                 +1.0 * speed * lp.dot_dir + -10 * np.abs(lp.dist) + +40 * col_penalty
             )
-            if not tile_coords is None:
-                if not tuple(tile_coords) in self.visited_tiles:
-                    reward += 100.
-                    self.visited_tiles[tuple(tile_coords)] = True
-                else:
-                    reward -= 1.
-         
-
         return reward
 
     def step(self, action: np.ndarray):
@@ -1897,15 +1906,13 @@ class Simulator(gym.Env):
         # Generate the current camera image
         obs = self.render_obs()
         misc = self.get_agent_info()
-        if self.enable_newly_visited_tile_reward:
-            d = self._compute_done_reward(tile_coords=misc["Simulator"]["tile_coords"])
-        else:
-            d = self._compute_done_reward(tile_coords=None)
+
+        d = self._compute_done_reward()
         misc["Simulator"]["msg"] = d.done_why
 
         return obs, d.reward, d.done, misc
 
-    def _compute_done_reward(self, tile_coords=None) -> DoneRewardInfo:
+    def _compute_done_reward(self) -> DoneRewardInfo:
         # If the agent is not in a valid pose (on drivable tiles)
         if not self._valid_pose(self.cur_pos, self.cur_angle):
             msg = "Stopping the simulator because we are at an invalid pose."
@@ -1925,7 +1932,7 @@ class Simulator(gym.Env):
             done_code = "max-steps-reached"
         else:
             done = False
-            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed, tile_coords=tile_coords)
+            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed)
             msg = ""
             done_code = "in-progress"
         return DoneRewardInfo(

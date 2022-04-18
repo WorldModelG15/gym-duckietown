@@ -415,6 +415,8 @@ class Simulator(gym.Env):
         self.last_action = np.array([0, 0])
         self.wheelVels = np.array([0, 0])
 
+        self.visited_tiles = {}
+
     def _init_vlists(self):
 
         ns = 8
@@ -1839,7 +1841,7 @@ class Simulator(gym.Env):
         gz = GH * tile_size - cp[1]
         return [gx, gy, gz], angle
 
-    def compute_reward(self, pos, angle, speed):
+    def compute_reward(self, pos, angle, speed, tile_coords=None):
         # Compute the collision avoidance penalty
         col_penalty = self.proximity_penalty2(pos, angle)
 
@@ -1854,6 +1856,14 @@ class Simulator(gym.Env):
             reward = (
                 +1.0 * speed * lp.dot_dir + -10 * np.abs(lp.dist) + +40 * col_penalty
             )
+            if not tile_coords is None:
+                if not tuple(tile_coords) in self.visited_tiles:
+                    reward += 40
+                    self.visited_tiles[tuple(tile_coords)] = True
+                else:
+                    reward -= 4
+         
+
         return reward
 
     def step(self, action: np.ndarray):
@@ -1867,12 +1877,12 @@ class Simulator(gym.Env):
         obs = self.render_obs()
         misc = self.get_agent_info()
 
-        d = self._compute_done_reward()
+        d = self._compute_done_reward(tile_coords=misc["Simulator"]["tile_coords"])
         misc["Simulator"]["msg"] = d.done_why
 
         return obs, d.reward, d.done, misc
 
-    def _compute_done_reward(self) -> DoneRewardInfo:
+    def _compute_done_reward(self, tile_coords=None) -> DoneRewardInfo:
         # If the agent is not in a valid pose (on drivable tiles)
         if not self._valid_pose(self.cur_pos, self.cur_angle):
             msg = "Stopping the simulator because we are at an invalid pose."
@@ -1892,7 +1902,7 @@ class Simulator(gym.Env):
             done_code = "max-steps-reached"
         else:
             done = False
-            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed)
+            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed, tile_coords=tile_coords)
             msg = ""
             done_code = "in-progress"
         return DoneRewardInfo(

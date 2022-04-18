@@ -10,11 +10,11 @@ tiles:
 - [floor  , curve_left/S, straight/E, straight/E, curve_left/E  , floor     , floor         , floor  ]
 - [floor  , floor       , floor     , floor     , floor         , floor     , floor         , floor  ]
 
-# Always start on the drivable tile
-start_tile: [2, 5]
+# # Always start on the drivable tile
+# start_tile: [2, 5]
 
-# Fixed initial pose
-start_pose: [[0.25, 0, 0.25], 3]
+# # Fixed initial pose
+# start_pose: [[0.25, 0, 0.25], 3]
 
 # NOTE: obstacles cannot be optional, because they will change for
 # every episode, and this will interfere with imitation learning

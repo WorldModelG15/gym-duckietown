@@ -10,11 +10,11 @@ tiles:
 
 tile_size: 1
 
-# Always start on the drivable tile
-start_tile: [2, 1]
+# # Always start on the drivable tile
+# start_tile: [2, 1]
 
-# Fixed initial pose
-start_pose: [[0.50, 0, 0.6925], 0]
+# # Fixed initial pose
+# start_pose: [[0.50, 0, 0.6925], 0]
 
 objects:
 

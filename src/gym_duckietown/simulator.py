@@ -241,6 +241,7 @@ class Simulator(gym.Env):
         color_sky: Sequence[float] = BLUE_SKY,
         style: str = "photos",
         enable_leds: bool = False,
+        enable_newly_visited_tile_reward: bool = False,
     ):
         """
 
@@ -266,6 +267,7 @@ class Simulator(gym.Env):
         :param enable_leds: Enables LEDs drawing.
         """
         self.enable_leds = enable_leds
+        self.enable_newly_visited_tile_reward = enable_newly_visited_tile_reward
         information = get_graphics_information()
         logger.info(
             f"Information about the graphics card:",
@@ -1877,10 +1879,10 @@ class Simulator(gym.Env):
             )
             if not tile_coords is None:
                 if not tuple(tile_coords) in self.visited_tiles:
-                    reward += 40
+                    reward += 100.
                     self.visited_tiles[tuple(tile_coords)] = True
                 else:
-                    reward -= 4
+                    reward -= 1.
          
 
         return reward
@@ -1895,8 +1897,10 @@ class Simulator(gym.Env):
         # Generate the current camera image
         obs = self.render_obs()
         misc = self.get_agent_info()
-
-        d = self._compute_done_reward(tile_coords=misc["Simulator"]["tile_coords"])
+        if self.enable_newly_visited_tile_reward:
+            d = self._compute_done_reward(tile_coords=misc["Simulator"]["tile_coords"])
+        else:
+            d = self._compute_done_reward(tile_coords=None)
         misc["Simulator"]["msg"] = d.done_why
 
         return obs, d.reward, d.done, misc

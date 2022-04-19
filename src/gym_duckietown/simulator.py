@@ -579,7 +579,7 @@ class Simulator(gym.Env):
             map_name = self.np_random.choice(self.map_names)
             self.map_name = map_name
             logger.info(f"Random map chosen: {map_name}")
-            #print("random map:", map_name)
+            # print("random map:", map_name)
             map_name = os.path.join(self.map_dir_abs_path, map_name + ".yaml")
             self._load_original_map(map_name)
 
@@ -843,23 +843,23 @@ class Simulator(gym.Env):
         """
 
         # Store the map name
-        #if os.path.exists(map_abs_path) and os.path.isfile(map_abs_path):
-            # if env is loaded using gym's register function, we need to extract the map name from the complete url
-            # map_name = os.path.basename(map_abs_path)
-            #map_name = map_name + ".yaml"
-            #assert map_name.endswith(".yaml")
-            #map_name = ".".join(map_name.split(".")[:-1])
-        #self.map_name = map_name
+        # if os.path.exists(map_abs_path) and os.path.isfile(map_abs_path):
+        # if env is loaded using gym's register function, we need to extract the map name from the complete url
+        # map_name = os.path.basename(map_abs_path)
+        # map_name = map_name + ".yaml"
+        # assert map_name.endswith(".yaml")
+        # map_name = ".".join(map_name.split(".")[:-1])
+        # self.map_name = map_name
 
         # Get the full map file path
         self.map_file_path = map_abs_path
 
         logger.debug(f'loading map file "{self.map_file_path}"')
-        print("loading map:",self.map_file_path)
+        # print("loading map:", self.map_file_path)
 
         with open(self.map_file_path, "r") as f:
             self.map_data = yaml.load(f, Loader=yaml.Loader)
-        print('map_data:',self.map_data)
+        logger.debug("map_data:", self.map_data)
         self._interpret_map(self.map_data)
 
     def create_and_load_random_static_duckie_map(
@@ -924,7 +924,7 @@ class Simulator(gym.Env):
     def load_map_random(
         self,
         map_dir_abs_path,
-        map_name='',
+        map_name="",
         Random=True,
     ):
         self.map_dir_abs_path = map_dir_abs_path
@@ -932,23 +932,22 @@ class Simulator(gym.Env):
         if Random == True:
             self.randomize_maps_on_reset = True
             self.map_names = os.listdir(map_dir_abs_path)
-            self.map_names = [mapfile.replace(".yaml", "") for mapfile in self.map_names]
+            self.map_names = [
+                mapfile.replace(".yaml", "") for mapfile in self.map_names
+            ]
             map_name = self.np_random.choice(self.map_names)
         map_abs_path = os.path.join(map_dir_abs_path, map_name + ".yaml")
         self._load_original_map(map_abs_path)
         self._interpret_map(self.map_data)
 
-    def load_map(
-        self,
-        map_dir_abs_path,
-        map_name='',
-        Random = False
-        ):
+    def load_map(self, map_dir_abs_path, map_name="", Random=False):
         self.map_dir_abs_path = map_dir_abs_path
         if Random == True:
             self.randomize_maps_on_reset = True
             self.map_names = os.listdir(map_dir_abs_path)
-            self.map_names = [mapfile.replace(".yaml", "") for mapfile in self.map_names]
+            self.map_names = [
+                mapfile.replace(".yaml", "") for mapfile in self.map_names
+            ]
             map_name = self.np_random.choice(self.map_names)
         map_abs_path = os.path.join(map_dir_abs_path, map_name + ".yaml")
         self._load_original_map(map_abs_path)
@@ -1900,10 +1899,10 @@ class Simulator(gym.Env):
             )
             if not tile_coords is None:
                 if not tuple(tile_coords) in self.visited_tiles:
-                    reward += 100.
+                    reward += 100.0
                     self.visited_tiles[tuple(tile_coords)] = True
                 else:
-                    reward -= 1.
+                    reward -= 1.0
         return reward
 
     def step(self, action: np.ndarray):
@@ -1945,7 +1944,9 @@ class Simulator(gym.Env):
             done_code = "max-steps-reached"
         else:
             done = False
-            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed, tile_coords=tile_coords)
+            reward = self.compute_reward(
+                self.cur_pos, self.cur_angle, self.robot_speed, tile_coords=tile_coords
+            )
             msg = ""
             done_code = "in-progress"
         return DoneRewardInfo(
